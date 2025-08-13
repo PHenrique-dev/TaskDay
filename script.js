@@ -110,4 +110,107 @@ if (logoutBtn) {
   };
 }
 
-// ...existing code...
+// --- Gestão de Rotina Personalizada ---
+// Adicionar, editar, excluir e ordenar atividades
+
+function loadRoutine() {
+  if (!currentUser) return;
+  let users = JSON.parse(localStorage.getItem('users') || '[]');
+  let user = users.find(u => u.email === currentUser.email);
+  if (!user) return;
+  // Ordena atividades pelo horário de início
+  user.routine = user.routine.sort((a, b) => a.start.localeCompare(b.start));
+  // Renderiza lista de atividades
+  const routineList = document.getElementById('routine-list');
+  routineList.innerHTML = '';
+  if (user.routine.length === 0) {
+    routineList.innerHTML = '<p class="text-muted">Nenhuma atividade cadastrada.</p>';
+    return;
+  }
+  user.routine.forEach((act, idx) => {
+    const div = document.createElement('div');
+    div.className = 'card mb-2';
+    div.innerHTML = `
+      <div class="card-body d-flex flex-column flex-sm-row align-items-sm-center justify-content-between">
+        <div>
+          <strong>${act.name}</strong><br>
+          <span class="text-secondary">${act.start} - ${act.end}</span>
+        </div>
+        <div class="mt-2 mt-sm-0">
+          <button class="btn btn-sm btn-outline-primary me-1" onclick="editActivity(${idx})">Editar</button>
+          <button class="btn btn-sm btn-outline-danger" onclick="deleteActivity(${idx})">Excluir</button>
+        </div>
+      </div>
+    `;
+    routineList.appendChild(div);
+  });
+}
+
+// Adicionar atividade
+const addActivityBtn = document.getElementById('addActivityBtn');
+if (addActivityBtn) {
+  addActivityBtn.onclick = function() {
+    document.getElementById('activityForm').reset();
+    document.getElementById('activityModalLabel').innerText = 'Adicionar Atividade';
+    document.getElementById('activityModal').setAttribute('data-edit-idx', '');
+    let modal = new bootstrap.Modal(document.getElementById('activityModal'));
+    modal.show();
+  };
+}
+
+// Salvar atividade (adicionar ou editar)
+const activityForm = document.getElementById('activityForm');
+if (activityForm) {
+  activityForm.onsubmit = function(e) {
+    e.preventDefault();
+    const name = document.getElementById('activityName').value.trim();
+    const start = document.getElementById('startTime').value;
+    const end = document.getElementById('endTime').value;
+    if (!name || !start || !end) return;
+    let users = JSON.parse(localStorage.getItem('users') || '[]');
+    let user = users.find(u => u.email === currentUser.email);
+    if (!user) return;
+    const editIdx = document.getElementById('activityModal').getAttribute('data-edit-idx');
+    if (editIdx === '') {
+      // Adiciona nova atividade
+      user.routine.push({ name, start, end });
+    } else {
+      // Edita atividade existente
+      user.routine[editIdx] = { name, start, end };
+    }
+    localStorage.setItem('users', JSON.stringify(users));
+    currentUser = user;
+    localStorage.setItem('currentUser', JSON.stringify(user));
+    loadRoutine();
+    let modal = bootstrap.Modal.getInstance(document.getElementById('activityModal'));
+    modal.hide();
+  };
+}
+
+// Editar atividade
+window.editActivity = function(idx) {
+  let users = JSON.parse(localStorage.getItem('users') || '[]');
+  let user = users.find(u => u.email === currentUser.email);
+  if (!user) return;
+  const act = user.routine[idx];
+  document.getElementById('activityName').value = act.name;
+  document.getElementById('startTime').value = act.start;
+  document.getElementById('endTime').value = act.end;
+  document.getElementById('activityModalLabel').innerText = 'Editar Atividade';
+  document.getElementById('activityModal').setAttribute('data-edit-idx', idx);
+  let modal = new bootstrap.Modal(document.getElementById('activityModal'));
+  modal.show();
+};
+
+// Excluir atividade
+window.deleteActivity = function(idx) {
+  if (!confirm('Deseja realmente excluir esta atividade?')) return;
+  let users = JSON.parse(localStorage.getItem('users') || '[]');
+  let user = users.find(u => u.email === currentUser.email);
+  if (!user) return;
+  user.routine.splice(idx, 1);
+  localStorage.setItem('users', JSON.stringify(users));
+  currentUser = user;
+  localStorage.setItem('currentUser', JSON.stringify(user));
+  loadRoutine();
+};
