@@ -25,10 +25,12 @@ window.onload = function() {
   if (keepLogged && user) {
     currentUser = JSON.parse(user);
     showSection('dashboard');
+    updateNavbarOnLogin(currentUser);
     loadRoutine();
     loadStats();
   } else {
     showSection('auth');
+    updateNavbarOnLogout();
   }
 };
 
@@ -75,6 +77,7 @@ if (loginForm) {
       localStorage.removeItem('keepLogged');
     }
     showSection('dashboard');
+    updateNavbarOnLogin(user);
     loadRoutine();
     loadStats();
   });
@@ -101,14 +104,36 @@ if (showRegister && showLogin) {
 }
 
 // Logout
-const logoutBtn = document.getElementById('logoutBtn');
+const logoutBtn = document.getElementById('navLogout');
 if (logoutBtn) {
   logoutBtn.onclick = function() {
     localStorage.removeItem('currentUser');
     localStorage.removeItem('keepLogged');
     currentUser = null;
     showSection('auth');
+    updateNavbarOnLogout();
   };
+}
+
+// Exibe/oculta links da navbar conforme login
+function updateNavbarOnLogin(user) {
+  document.getElementById('navLogin').classList.add('d-none');
+  document.getElementById('navRegister').classList.add('d-none');
+  document.getElementById('navWelcome').classList.remove('d-none');
+  document.getElementById('navActivities').classList.remove('d-none');
+  document.getElementById('navProfile').classList.remove('d-none');
+  document.getElementById('navAchievements').classList.remove('d-none');
+  document.getElementById('navLogout').classList.remove('d-none');
+  document.getElementById('userNameNav').innerText = user.name || user.email;
+}
+function updateNavbarOnLogout() {
+  document.getElementById('navLogin').classList.remove('d-none');
+  document.getElementById('navRegister').classList.remove('d-none');
+  document.getElementById('navWelcome').classList.add('d-none');
+  document.getElementById('navActivities').classList.add('d-none');
+  document.getElementById('navProfile').classList.add('d-none');
+  document.getElementById('navAchievements').classList.add('d-none');
+  document.getElementById('navLogout').classList.add('d-none');
 }
 
 // --- Gestão de Rotina Personalizada ---
