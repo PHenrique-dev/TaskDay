@@ -590,3 +590,32 @@ function updateNavbarOnLogin(user) {
   showScreen('activities');
   updateWelcome(user);
 }
+
+// Lista de conquistas possíveis
+const ALL_ACHIEVEMENTS = [
+  { key: '100 pontos', label: '100 pontos', icon: 'bi-star-fill' },
+  { key: '10 atividades', label: '10 atividades concluídas', icon: 'bi-check2-circle' },
+  { key: '7 dias seguidos', label: '7 dias seguidos', icon: 'bi-calendar-week' }
+];
+// Renderiza tela de conquistas
+function showAchievements() {
+  if (!currentUser) return;
+  const list = document.getElementById('achievementsList');
+  const unlocked = currentUser.trophies || [];
+  list.innerHTML = '<div class="row">' + ALL_ACHIEVEMENTS.map(a => {
+    const isUnlocked = unlocked.includes(a.key);
+    return `
+      <div class="col-12 col-md-6 mb-3">
+        <div class="card achievement-card ${isUnlocked ? 'border-success' : 'border-secondary'}">
+          <div class="card-body d-flex align-items-center">
+            <i class="bi ${a.icon} me-3" style="font-size:2rem; color:${isUnlocked ? '#28a745' : '#aaa'}"></i>
+            <div>
+              <h6 class="mb-1">${a.label}</h6>
+              <span class="badge ${isUnlocked ? 'bg-success' : 'bg-secondary'}">${isUnlocked ? 'Desbloqueada' : 'Pendente'}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('') + '</div>';
+}
