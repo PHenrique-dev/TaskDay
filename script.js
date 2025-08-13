@@ -542,23 +542,37 @@ function showProfile() {
     </div>
   `;
 }
-// Navegação entre telas
+
+// Carrega tela dinâmica no dashboard
+function loadScreenHtml(file, containerId, callback) {
+  fetch(file)
+    .then(res => res.text())
+    .then(html => {
+      document.getElementById(containerId).innerHTML = html;
+      if (callback) callback();
+    });
+}
+
+// Navegação entre telas usando arquivos separados
 function showScreen(screen) {
   document.getElementById('screenActivities').classList.add('d-none');
   document.getElementById('screenProfile').classList.add('d-none');
   document.getElementById('screenAchievements').classList.add('d-none');
   if (screen === 'activities') {
     document.getElementById('screenActivities').classList.remove('d-none');
-    loadRoutine();
-    loadStats();
+    loadScreenHtml('atividades.html', 'screenActivities', () => {
+      loadRoutine();
+      loadStats();
+    });
   } else if (screen === 'profile') {
     document.getElementById('screenProfile').classList.remove('d-none');
-    showProfile();
+    loadScreenHtml('perfil.html', 'screenProfile', showProfile);
   } else if (screen === 'achievements') {
     document.getElementById('screenAchievements').classList.remove('d-none');
-    showAchievements();
+    loadScreenHtml('conquistas.html', 'screenAchievements', showAchievements);
   }
 }
+
 // Eventos de navegação
 const navActivities = document.getElementById('navActivities');
 if (navActivities) navActivities.onclick = () => showScreen('activities');
@@ -566,6 +580,7 @@ const navProfile = document.getElementById('navProfile');
 if (navProfile) navProfile.onclick = () => showScreen('profile');
 const navAchievements = document.getElementById('navAchievements');
 if (navAchievements) navAchievements.onclick = () => showScreen('achievements');
+
 // Exibe tela de atividades por padrão após login
 function updateNavbarOnLogin(user) {
   document.getElementById('navLogin').classList.add('d-none');
