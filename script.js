@@ -368,3 +368,86 @@ function showToast(msg) {
     });
   };
 })();
+
+// --- Integração Google Calendar e Notificações ---
+
+// Adiciona botão de sincronizar Google Calendar no dashboard
+(function addGoogleCalendarBtn() {
+  const dashboard = document.getElementById('dashboard-section');
+  if (dashboard && !document.getElementById('googleSyncBtn')) {
+    const btn = document.createElement('button');
+    btn.id = 'googleSyncBtn';
+    btn.className = 'btn btn-outline-info w-100 mb-3';
+    btn.innerText = 'Sincronizar com Google Calendar';
+    btn.onclick = function() { googleAuth(); };
+    dashboard.insertBefore(btn, dashboard.firstChild);
+  }
+})();
+
+// Estrutura OAuth2 Google (front-end)
+function googleAuth() {
+  showToast('Funcionalidade de autenticação Google em desenvolvimento.');
+  // Aqui será implementado o fluxo OAuth2
+  // window.open('https://accounts.google.com/o/oauth2/v2/auth?...', '_blank');
+}
+
+// Adicionar evento ao Google Calendar
+function addEventToGoogleCalendar(activity) {
+  showToast('Adicionar evento ao Google Calendar em desenvolvimento.');
+  // Aqui será implementada a chamada à API do Google Calendar
+}
+
+// Adiciona botão de adicionar evento em cada atividade
+(function enhanceRoutineListGoogle() {
+  const origLoadRoutine = window.loadRoutine;
+  window.loadRoutine = function() {
+    origLoadRoutine();
+    let users = JSON.parse(localStorage.getItem('users') || '[]');
+    let user = users.find(u => u.email === (currentUser && currentUser.email));
+    if (!user || !user.routine.length) return;
+    const routineList = document.getElementById('routine-list');
+    Array.from(routineList.children).forEach((card, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'btn btn-sm btn-outline-info ms-2';
+      btn.innerText = 'Google Calendar';
+      btn.onclick = function() { addEventToGoogleCalendar(user.routine[idx]); };
+      card.querySelector('.card-body > div:last-child').appendChild(btn);
+    });
+  };
+})();
+
+// Notificações no navegador para início de atividade
+function scheduleNotifications() {
+  if (!currentUser || !currentUser.routine) return;
+  if (!('Notification' in window)) return;
+  currentUser.routine.forEach((act, idx) => {
+    if (act.completed) return;
+    const now = new Date();
+    const today = now.toISOString().slice(0,10);
+    const start = new Date(today + 'T' + act.start);
+    const diff = start - now;
+    if (diff > 0 && diff < 3600000) { // até 1h antes
+      setTimeout(() => {
+        if (Notification.permission === 'granted') {
+          new Notification('TaskDay', { body: `Está quase na hora de: ${act.name}` });
+        }
+      }, diff);
+    }
+  });
+}
+
+// Solicita permissão de notificação ao logar
+(function askNotificationPermission() {
+  if ('Notification' in window && Notification.permission !== 'granted') {
+    Notification.requestPermission();
+  }
+})();
+
+// Agenda notificações ao carregar rotina
+(function autoScheduleNotifications() {
+  const origLoadRoutine = window.loadRoutine;
+  window.loadRoutine = function() {
+    origLoadRoutine();
+    scheduleNotifications();
+  };
+})();
