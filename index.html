@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaskDay - Rotina Personalizada</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-light">
+  <nav class="navbar navbar-expand-lg navbar-light bg-primary">
+    <div class="container-fluid">
+      <a class="navbar-brand text-white" href="#">TaskDay</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link text-white" href="#login">Login</a></li>
+          <li class="nav-item"><a class="nav-link text-white" href="#register">Cadastro</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+  <main class="container py-4">
+    <section id="auth-section">
+      <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+          <div class="card mb-3">
+            <div class="card-body">
+              <h5 class="card-title text-center">Entrar</h5>
+              <form id="login-form">
+                <div class="mb-3">
+                  <label for="loginEmail" class="form-label">Email</label>
+                  <input type="email" class="form-control" id="loginEmail" required>
+                </div>
+                <div class="mb-3">
+                  <label for="loginPassword" class="form-label">Senha</label>
+                  <input type="password" class="form-control" id="loginPassword" required>
+                </div>
+                <div class="form-check mb-3">
+                  <input class="form-check-input" type="checkbox" id="keepLogged">
+                  <label class="form-check-label" for="keepLogged">Manter logado</label>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Entrar</button>
+              </form>
+              <div class="text-center mt-3">
+                <a href="#register" id="show-register">Não tem conta? Cadastre-se</a>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title text-center">Cadastro</h5>
+              <form id="register-form">
+                <div class="mb-3">
+                  <label for="registerEmail" class="form-label">Email</label>
+                  <input type="email" class="form-control" id="registerEmail" required>
+                </div>
+                <div class="mb-3">
+                  <label for="registerPassword" class="form-label">Senha</label>
+                  <input type="password" class="form-control" id="registerPassword" required>
+                </div>
+                <button type="submit" class="btn btn-success w-100">Cadastrar</button>
+              </form>
+              <div class="text-center mt-3">
+                <a href="#login" id="show-login">Já tem conta? Entrar</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section id="dashboard-section" class="d-none">
+      <div class="text-center mb-4">
+        <h2>Bem-vindo ao TaskDay!</h2>
+        <button id="logoutBtn" class="btn btn-outline-danger btn-sm">Sair</button>
+      </div>
+      <div id="routine-list" class="mb-4"></div>
+      <button class="btn btn-primary w-100 mb-3" id="addActivityBtn">Adicionar Atividade</button>
+      <div id="stats" class="mb-3"></div>
+    </section>
+    <!-- Modal Adicionar/Editar Atividade -->
+    <div class="modal fade" id="activityModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="activityModalLabel">Adicionar Atividade</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <form id="activityForm">
+              <div class="mb-3">
+                <label for="activityName" class="form-label">Nome da Atividade</label>
+                <input type="text" class="form-control" id="activityName" required>
+              </div>
+              <div class="mb-3">
+                <label for="startTime" class="form-label">Horário de Início</label>
+                <input type="time" class="form-control" id="startTime" required>
+              </div>
+              <div class="mb-3">
+                <label for="endTime" class="form-label">Horário de Término</label>
+                <input type="time" class="form-control" id="endTime" required>
+              </div>
+              <button type="submit" class="btn btn-primary w-100">Salvar</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

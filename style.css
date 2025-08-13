@@ -1,0 +1,28 @@
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.navbar {
+  border-radius: 0 0 16px 16px;
+}
+
+.card {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+#dashboard-section h2 {
+  font-size: 1.5rem;
+}
+
+#routine-list {
+  min-height: 120px;
+}
+
+@media (max-width: 576px) {
+  .container {
+    padding: 0 8px;
+  }
+  .card {
+    margin-bottom: 16px;
+  }
+}
