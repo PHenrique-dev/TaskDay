@@ -6,6 +6,7 @@
   <title>TaskDay - Rotina Personalizada</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
 </head>
 <body class="bg-light">
   <nav class="navbar navbar-expand-lg navbar-light bg-primary">
@@ -15,9 +16,14 @@
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item"><a class="nav-link text-white" href="#login">Login</a></li>
-          <li class="nav-item"><a class="nav-link text-white" href="#register">Cadastro</a></li>
+        <ul class="navbar-nav ms-auto" id="navLinks">
+          <li class="nav-item"><a class="nav-link text-white" href="#login" id="navLogin">Login</a></li>
+          <li class="nav-item"><a class="nav-link text-white" href="#register" id="navRegister">Cadastro</a></li>
+          <li class="nav-item d-none" id="navWelcome"><span class="nav-link text-white">Bem-vindo(a), <span id="userNameNav"></span></span></li>
+          <li class="nav-item d-none" id="navActivities"><a class="nav-link text-white" href="#activities"><i class="bi bi-list-task"></i> Atividades</a></li>
+          <li class="nav-item d-none" id="navProfile"><a class="nav-link text-white" href="#profile"><i class="bi bi-person"></i> Perfil</a></li>
+          <li class="nav-item d-none" id="navAchievements"><a class="nav-link text-white" href="#achievements"><i class="bi bi-trophy"></i> Conquistas</a></li>
+          <li class="nav-item d-none" id="navLogout"><button class="btn btn-sm btn-light ms-2">Sair</button></li>
           <li class="nav-item">
             <button id="themeToggle" class="btn btn-sm btn-light ms-2">🌙</button>
           </li>
@@ -75,13 +81,29 @@
       </div>
     </section>
     <section id="dashboard-section" class="d-none">
-      <div class="text-center mb-4">
-        <h2>Bem-vindo ao TaskDay!</h2>
-        <button id="logoutBtn" class="btn btn-outline-danger btn-sm">Sair</button>
+      <div id="screenActivities">
+        <!-- Atividades -->
+        <div class="text-center mb-4">
+          <h2><i class="bi bi-list-task"></i> Atividades</h2>
+        </div>
+        <div id="routine-list" class="mb-4"></div>
+        <button class="btn btn-primary w-100 mb-3" id="addActivityBtn">Adicionar Atividade</button>
+        <div id="stats" class="mb-3"></div>
       </div>
-      <div id="routine-list" class="mb-4"></div>
-      <button class="btn btn-primary w-100 mb-3" id="addActivityBtn">Adicionar Atividade</button>
-      <div id="stats" class="mb-3"></div>
+      <div id="screenProfile" class="d-none">
+        <!-- Perfil -->
+        <div class="text-center mb-4">
+          <h2><i class="bi bi-person"></i> Perfil</h2>
+        </div>
+        <div id="profileCard"></div>
+      </div>
+      <div id="screenAchievements" class="d-none">
+        <!-- Conquistas -->
+        <div class="text-center mb-4">
+          <h2><i class="bi bi-trophy"></i> Conquistas</h2>
+        </div>
+        <div id="achievementsList"></div>
+      </div>
     </section>
     <!-- Modal Adicionar/Editar Atividade -->
     <div class="modal fade" id="activityModal" tabindex="-1">
