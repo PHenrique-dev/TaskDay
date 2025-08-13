@@ -331,13 +331,34 @@ function showMotivationalMsg(level, completed, total) {
   msgEl.innerText = msg;
 }
 
-// Toast para notificações rápidas
+// --- Tema Claro/Escuro ---
+const themeToggle = document.getElementById('themeToggle');
+if (themeToggle) {
+  themeToggle.onclick = function() {
+    document.body.classList.toggle('dark-mode');
+    if (document.body.classList.contains('dark-mode')) {
+      themeToggle.innerText = '☀️';
+      localStorage.setItem('theme', 'dark');
+    } else {
+      themeToggle.innerText = '🌙';
+      localStorage.setItem('theme', 'light');
+    }
+  };
+  // Carrega tema salvo
+  if (localStorage.getItem('theme') === 'dark') {
+    document.body.classList.add('dark-mode');
+    themeToggle.innerText = '☀️';
+  }
+}
+
+// Toasts centralizados no container
 function showToast(msg) {
+  const toastContainer = document.getElementById('toastContainer');
   const toast = document.createElement('div');
-  toast.className = 'toast align-items-center text-white bg-primary border-0 position-fixed bottom-0 end-0 m-3';
+  toast.className = 'toast align-items-center text-white bg-primary border-0 mb-2';
   toast.role = 'alert';
   toast.innerHTML = `<div class="d-flex"><div class="toast-body">${msg}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>`;
-  document.body.appendChild(toast);
+  toastContainer.appendChild(toast);
   let bsToast = new bootstrap.Toast(toast, { delay: 3000 });
   bsToast.show();
   toast.addEventListener('hidden.bs.toast', () => toast.remove());

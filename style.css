@@ -26,3 +26,37 @@ body {
     margin-bottom: 16px;
   }
 }
+
+/* Estilos para tema escuro */
+body.dark-mode {
+  background-color: #181a1b;
+  color: #f1f1f1;
+}
+body.dark-mode .navbar {
+  background-color: #222 !important;
+}
+body.dark-mode .card {
+  background-color: #23272b;
+  color: #f1f1f1;
+}
+body.dark-mode .btn-light {
+  background-color: #444;
+  color: #fff;
+}
+body.dark-mode .toast {
+  background-color: #333 !important;
+  color: #fff !important;
+}
+
+/* Refinamento mobile */
+@media (max-width: 576px) {
+  .container {
+    padding: 0 4px;
+  }
+  .card {
+    margin-bottom: 12px;
+  }
+  #stats .card-body {
+    font-size: 0.95rem;
+  }
+}
