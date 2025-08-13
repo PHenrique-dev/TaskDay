@@ -8,14 +8,14 @@
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
 </head>
-<body class="bg-light">
+<body class="bg-dark">
   <nav class="navbar navbar-expand-lg navbar-light bg-primary">
     <div class="container-fluid">
-      <a class="navbar-brand text-white" href="#">TaskDay</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
+      <a class="navbar-brand" href="#">TaskDay</a>
+      <button class="navbar-toggler text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon" style="color: #2ecc71;"></span>
       </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
+      <div class="collapse navbar-collapse text-white" id="navbarNav">
         <ul class="navbar-nav ms-auto" id="navLinks">
           <li class="nav-item"><a class="nav-link text-white" href="#login" id="navLogin">Login</a></li>
           <li class="nav-item"><a class="nav-link text-white" href="#register" id="navRegister">Cadastro</a></li>
@@ -24,9 +24,6 @@
           <li class="nav-item d-none" id="navProfile"><a class="nav-link text-white" href="#profile"><i class="bi bi-person"></i> Perfil</a></li>
           <li class="nav-item d-none" id="navAchievements"><a class="nav-link text-white" href="#achievements"><i class="bi bi-trophy"></i> Conquistas</a></li>
           <li class="nav-item d-none" id="navLogout"><button class="btn btn-sm btn-light ms-2">Sair</button></li>
-          <li class="nav-item">
-            <button id="themeToggle" class="btn btn-sm btn-light ms-2">🌙</button>
-          </li>
         </ul>
       </div>
     </div>
@@ -112,24 +109,24 @@
     <!-- Modal Adicionar/Editar Atividade -->
     <div class="modal fade" id="activityModal" tabindex="-1">
       <div class="modal-dialog">
-        <div class="modal-content">
+        <div class="modal-content bg-dark">
           <div class="modal-header">
-            <h5 class="modal-title" id="activityModalLabel">Adicionar Atividade</h5>
+            <h5 class="modal-title text-success" id="activityModalLabel">Adicionar Atividade</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
-          <div class="modal-body">
+          <div class="modal-body bg-dark">
             <form id="activityForm">
               <div class="mb-3">
-                <label for="activityName" class="form-label">Nome da Atividade</label>
-                <input type="text" class="form-control" id="activityName" required>
+                <label for="activityName" class="form-label text-success">Nome da Atividade</label>
+                <input type="text" class="form-control bg-dark text-success" id="activityName" required>
               </div>
               <div class="mb-3">
-                <label for="startTime" class="form-label">Horário de Início</label>
-                <input type="time" class="form-control" id="startTime" required>
+                <label for="startTime" class="form-label text-success">Horário de Início</label>
+                <input type="time" class="form-control bg-dark text-success" id="startTime" required>
               </div>
               <div class="mb-3">
-                <label for="endTime" class="form-label">Horário de Término</label>
-                <input type="time" class="form-control" id="endTime" required>
+                <label for="endTime" class="form-label text-success">Horário de Término</label>
+                <input type="time" class="form-control bg-dark text-success" id="endTime" required>
               </div>
               <button type="submit" class="btn btn-primary w-100">Salvar</button>
             </form>
@@ -141,6 +138,7 @@
     <div id="toastContainer" class="position-fixed bottom-0 end-0 p-3" style="z-index: 1055;"></div>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

@@ -348,6 +348,16 @@ function completeActivity(idx) {
     }
     showCongratsModal(msg);
   }
+  // Histórico diário
+  let today = new Date();
+  let dayKey = today.toISOString().slice(0, 10);
+  user.dailyStats = user.dailyStats || [];
+  let dayEntry = user.dailyStats.find(d => d.day === dayKey);
+  if (dayEntry) {
+    dayEntry.completed += 1;
+  } else {
+    user.dailyStats.push({ day: dayKey, completed: 1 });
+  }
   localStorage.setItem('users', JSON.stringify(users));
   currentUser = user;
   localStorage.setItem('currentUser', JSON.stringify(user));
@@ -553,6 +563,60 @@ function showProfile() {
       </div>
     </div>
   `;
+}
+
+// Função para exibir gráficos no perfil
+function showPerformanceCharts() {
+  if (!currentUser) return;
+  let user = currentUser;
+  // Gráfico diário
+  const dailyCtx = document.getElementById('dailyChart')?.getContext('2d');
+  if (dailyCtx) {
+    const days = (user.dailyStats || []).slice(-7).map(d => d.day.slice(5));
+    const values = (user.dailyStats || []).slice(-7).map(d => d.completed);
+    new Chart(dailyCtx, {
+      type: 'bar',
+      data: {
+        labels: days,
+        datasets: [{ label: 'Concluídas/dia', data: values, backgroundColor: '#2ecc71' }]
+      },
+      options: { plugins: { legend: { display: false } } }
+    });
+  }
+  // Gráfico semanal
+  const weeklyCtx = document.getElementById('weeklyChart')?.getContext('2d');
+  if (weeklyCtx) {
+    const weeks = (user.weekStats || []).slice(-6).map(w => w.week);
+    const values = (user.weekStats || []).slice(-6).map(w => w.completed);
+    new Chart(weeklyCtx, {
+      type: 'line',
+      data: {
+        labels: weeks,
+        datasets: [{ label: 'Concluídas/semana', data: values, borderColor: '#2ecc71', backgroundColor: 'rgba(46,204,113,0.2)' }]
+      },
+      options: { plugins: { legend: { display: false } } }
+    });
+  }
+  // Gráfico mensal
+  const monthlyCtx = document.getElementById('monthlyChart')?.getContext('2d');
+  if (monthlyCtx) {
+    const months = (user.monthStats || []).slice(-6).map(m => m.month);
+    const values = (user.monthStats || []).slice(-6).map(m => m.completed);
+    new Chart(monthlyCtx, {
+      type: 'bar',
+      data: {
+        labels: months,
+        datasets: [{ label: 'Concluídas/mês', data: values, backgroundColor: '#2ecc71' }]
+      },
+      options: { plugins: { legend: { display: false } } }
+    });
+  }
+}
+
+// Chama exibição dos gráficos ao carregar perfil
+function loadProfileScreen() {
+  showProfile();
+  showPerformanceCharts();
 }
 
 // Carrega tela dinâmica no dashboard
