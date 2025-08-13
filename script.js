@@ -511,3 +511,82 @@ function scheduleNotifications() {
     scheduleNotifications();
   };
 })();
+
+// Renderiza tela de perfil
+function showProfile() {
+  if (!currentUser) return;
+  const card = document.getElementById('profileCard');
+  const points = currentUser.points || 0;
+  const level = getLevel(points);
+  const completed = (currentUser.routine||[]).filter(a => a.completed).length;
+  const total = (currentUser.routine||[]).length;
+  card.innerHTML = `
+    <div class="card profile-card mx-auto mb-4" style="max-width:400px;">
+      <div class="card-body text-center">
+        <div class="mb-3">
+          <i class="bi bi-person-circle" style="font-size:2.5rem;color:#007bff;"></i>
+        </div>
+        <h5 class="card-title mb-1">${currentUser.name}</h5>
+        <p class="text-muted mb-2">${currentUser.email}</p>
+        <div class="mb-2">
+          <span class="badge bg-primary">Nível ${level}</span>
+          <span class="badge bg-success">${points} pontos</span>
+        </div>
+        <div class="mb-2">
+          <strong>Atividades concluídas:</strong> ${completed} / ${total}
+        </div>
+        <div class="mb-2">
+          <strong>Conquistas:</strong> ${currentUser.trophies && currentUser.trophies.length ? currentUser.trophies.map(t=>`<span class='badge bg-warning text-dark me-1'>${t}</span>`).join('') : '<span class="text-muted">Nenhuma</span>'}
+        </div>
+      </div>
+    </div>
+  `;
+}
+// Navegação entre telas
+function showScreen(screen) {
+  document.getElementById('screenActivities').classList.add('d-none');
+  document.getElementById('screenProfile').classList.add('d-none');
+  document.getElementById('screenAchievements').classList.add('d-none');
+  if (screen === 'activities') {
+    document.getElementById('screenActivities').classList.remove('d-none');
+    loadRoutine();
+    loadStats();
+  } else if (screen === 'profile') {
+    document.getElementById('screenProfile').classList.remove('d-none');
+    showProfile();
+  } else if (screen === 'achievements') {
+    document.getElementById('screenAchievements').classList.remove('d-none');
+    showAchievements();
+  }
+}
+// Eventos de navegação
+const navActivities = document.getElementById('navActivities');
+if (navActivities) navActivities.onclick = () => showScreen('activities');
+const navProfile = document.getElementById('navProfile');
+if (navProfile) navProfile.onclick = () => showScreen('profile');
+const navAchievements = document.getElementById('navAchievements');
+if (navAchievements) navAchievements.onclick = () => showScreen('achievements');
+// Exibe tela de atividades por padrão após login
+function updateNavbarOnLogin(user) {
+  document.getElementById('navLogin').classList.add('d-none');
+  document.getElementById('navRegister').classList.add('d-none');
+  document.getElementById('navWelcome').classList.remove('d-none');
+  document.getElementById('navActivities').classList.remove('d-none');
+  document.getElementById('navProfile').classList.remove('d-none');
+  document.getElementById('navAchievements').classList.remove('d-none');
+  document.getElementById('navLogout').classList.remove('d-none');
+  document.getElementById('userNameNav').innerText = user.name || user.email;
+  // Saudação no dashboard (opcional)
+  const dashboard = document.getElementById('dashboard-section');
+  if (dashboard) {
+    let welcomeEl = dashboard.querySelector('.dashboard-welcome');
+    if (!welcomeEl) {
+      welcomeEl = document.createElement('div');
+      welcomeEl.className = 'dashboard-welcome text-center mb-3';
+      dashboard.insertBefore(welcomeEl, dashboard.firstChild);
+    }
+    welcomeEl.innerHTML = `<h4>Bem-vindo(a), ${user.name || user.email}!</h4>`;
+  }
+  showScreen('activities');
+  updateWelcome(user);
+}
