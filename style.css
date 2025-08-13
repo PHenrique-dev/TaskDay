@@ -1,62 +1,129 @@
+/* Identidade visual TaskDay */
 body {
-  font-family: 'Segoe UI', Arial, sans-serif;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+  background: linear-gradient(135deg, #e3f0ff 0%, #f8faff 100%);
+  color: #222;
 }
 
 .navbar {
-  border-radius: 0 0 16px 16px;
+  background: linear-gradient(90deg, #007bff 60%, #00c6ff 100%) !important;
+  border-radius: 0 0 18px 18px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+
+.navbar .navbar-brand {
+  font-weight: 700;
+  letter-spacing: 1px;
+  font-size: 1.3rem;
+}
+
+.navbar .nav-link, .navbar .btn {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.dashboard-welcome h4 {
+  font-weight: 600;
+  color: #007bff;
 }
 
 .card {
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  border: none;
 }
 
-#dashboard-section h2 {
-  font-size: 1.5rem;
+.profile-card {
+  background: linear-gradient(120deg, #f8faff 60%, #e3f0ff 100%);
 }
 
-#routine-list {
-  min-height: 120px;
+.achievement-card {
+  transition: box-shadow 0.2s;
 }
 
+.achievement-card:hover {
+  box-shadow: 0 4px 16px rgba(0,123,255,0.12);
+}
+
+.btn-primary {
+  background: linear-gradient(90deg, #007bff 60%, #00c6ff 100%);
+  border: none;
+  font-weight: 600;
+}
+
+.btn-success, .badge-success {
+  background: linear-gradient(90deg, #28a745 60%, #a8e063 100%);
+  border: none;
+}
+
+.btn-outline-info {
+  border-color: #00c6ff;
+  color: #007bff;
+}
+
+.btn-outline-info:hover {
+  background: #00c6ff;
+  color: #fff;
+}
+
+.badge-warning {
+  background: linear-gradient(90deg, #ffc107 60%, #ffe082 100%);
+  color: #222;
+}
+
+input, select, textarea {
+  border-radius: 8px !important;
+}
+
+.toast {
+  border-radius: 12px;
+  font-size: 1rem;
+}
+
+/* Ícones grandes para telas */
+.bi {
+  vertical-align: middle;
+}
+
+/* Espaçamento e responsividade */
 @media (max-width: 576px) {
   .container {
-    padding: 0 8px;
+    padding: 0 2px;
   }
   .card {
-    margin-bottom: 16px;
+    margin-bottom: 10px;
+  }
+  .dashboard-welcome h4 {
+    font-size: 1.1rem;
   }
 }
 
-/* Estilos para tema escuro */
+/* Tema escuro personalizado */
 body.dark-mode {
-  background-color: #181a1b;
+  background: linear-gradient(135deg, #23272b 0%, #181a1b 100%);
   color: #f1f1f1;
 }
 body.dark-mode .navbar {
-  background-color: #222 !important;
+  background: linear-gradient(90deg, #222 60%, #444 100%) !important;
 }
-body.dark-mode .card {
-  background-color: #23272b;
+body.dark-mode .card, body.dark-mode .profile-card {
+  background: #23272b;
   color: #f1f1f1;
 }
-body.dark-mode .btn-light {
-  background-color: #444;
-  color: #fff;
+body.dark-mode .dashboard-welcome h4 {
+  color: #00c6ff;
+}
+body.dark-mode .btn-primary {
+  background: linear-gradient(90deg, #0056b3 60%, #00c6ff 100%);
+}
+body.dark-mode .btn-success, body.dark-mode .badge-success {
+  background: linear-gradient(90deg, #218838 60%, #a8e063 100%);
+}
+body.dark-mode .badge-warning {
+  background: linear-gradient(90deg, #ffc107 60%, #ffe082 100%);
+  color: #222;
 }
 body.dark-mode .toast {
   background-color: #333 !important;
   color: #fff !important;
-}
-
-/* Refinamento mobile */
-@media (max-width: 576px) {
-  .container {
-    padding: 0 4px;
-  }
-  .card {
-    margin-bottom: 12px;
-  }
-  #stats .card-body {
-    font-size: 0.95rem;
-  }
 }
