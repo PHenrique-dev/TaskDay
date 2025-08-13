@@ -152,32 +152,43 @@ function updateNavbarOnLogout() {
 // --- Gestão de Rotina Personalizada ---
 // Adicionar, editar, excluir e ordenar atividades
 
+// Função para obter o dia da semana atual (0=Dom, 1=Seg, ...)
+function getTodayWeekday() {
+  return new Date().getDay();
+}
+
+// Atualiza rotina para mostrar apenas atividades do dia atual
 function loadRoutine() {
   if (!currentUser) return;
   let users = JSON.parse(localStorage.getItem('users') || '[]');
   let user = users.find(u => u.email === currentUser.email);
   if (!user) return;
-  // Ordena atividades pelo horário de início
   user.routine = user.routine.sort((a, b) => a.start.localeCompare(b.start));
-  // Renderiza lista de atividades
   const routineList = document.getElementById('routine-list');
   routineList.innerHTML = '';
-  if (user.routine.length === 0) {
-    routineList.innerHTML = '<p class="text-muted">Nenhuma atividade cadastrada.</p>';
+  const today = getTodayWeekday();
+  // Filtra atividades do dia
+  const todayActivities = user.routine.filter(act => act.days && act.days.includes(today));
+  if (todayActivities.length === 0) {
+    routineList.innerHTML = '<p class="text-muted">Nenhuma atividade para hoje.</p>';
     return;
   }
-  user.routine.forEach((act, idx) => {
+  todayActivities.forEach((act, idx) => {
     const div = document.createElement('div');
-    div.className = 'card mb-2';
+    div.className = 'card mb-2 position-relative';
+    let badgeConcluida = act.completed ? `<span class='badge bg-success position-absolute top-0 end-0 m-2' style='z-index:2;'>Concluída</span>` : '';
     div.innerHTML = `
-      <div class="card-body d-flex flex-column flex-sm-row align-items-sm-center justify-content-between">
-        <div>
+      ${badgeConcluida}
+      <div class="card-body d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
+        <div class="flex-grow-1">
           <strong>${act.name}</strong><br>
           <span class="text-secondary">${act.start} - ${act.end}</span>
         </div>
-        <div class="mt-2 mt-sm-0">
-          <button class="btn btn-sm btn-outline-primary me-1" onclick="editActivity(${idx})">Editar</button>
-          <button class="btn btn-sm btn-outline-danger" onclick="deleteActivity(${idx})">Excluir</button>
+        <div class="d-flex flex-wrap gap-2 align-items-center justify-content-end">
+          <button class="btn btn-sm btn-outline-primary" onclick="editActivity(${idx})"><i class="bi bi-pencil"></i> Editar</button>
+          <button class="btn btn-sm btn-outline-danger" onclick="showDeleteModal(${idx})"><i class="bi bi-trash"></i> Excluir</button>
+          <button class="btn btn-sm btn-outline-info" onclick="addEventToGoogleCalendar(currentUser.routine[${idx}])"><i class="bi bi-calendar-plus"></i> Google Calendar</button>
+          ${!act.completed ? `<button class='btn btn-sm btn-success ms-2' onclick='completeActivity(${idx})'>Concluir</button>` : ''}
         </div>
       </div>
     `;
@@ -197,6 +208,15 @@ if (addActivityBtn) {
   };
 }
 
+// Função para obter dias selecionados
+function getSelectedDays() {
+  const days = [];
+  for (let i = 0; i < 7; i++) {
+    if (document.getElementById('day' + i)?.checked) days.push(i);
+  }
+  return days;
+}
+
 // Salvar atividade (adicionar ou editar)
 const activityForm = document.getElementById('activityForm');
 if (activityForm) {
@@ -205,17 +225,22 @@ if (activityForm) {
     const name = document.getElementById('activityName').value.trim();
     const start = document.getElementById('startTime').value;
     const end = document.getElementById('endTime').value;
+    const days = getSelectedDays();
     if (!name || !start || !end) return;
+    if (days.length === 0) {
+      alert('Selecione pelo menos um dia da semana para a atividade.');
+      return;
+    }
     let users = JSON.parse(localStorage.getItem('users') || '[]');
     let user = users.find(u => u.email === currentUser.email);
     if (!user) return;
     const editIdx = document.getElementById('activityModal').getAttribute('data-edit-idx');
     if (editIdx === '') {
       // Adiciona nova atividade
-      user.routine.push({ name, start, end });
+      user.routine.push({ name, start, end, days });
     } else {
       // Edita atividade existente
-      user.routine[editIdx] = { name, start, end };
+      user.routine[editIdx] = { name, start, end, days };
     }
     localStorage.setItem('users', JSON.stringify(users));
     currentUser = user;
@@ -235,15 +260,56 @@ window.editActivity = function(idx) {
   document.getElementById('activityName').value = act.name;
   document.getElementById('startTime').value = act.start;
   document.getElementById('endTime').value = act.end;
+  // Preenche os checkboxes dos dias
+  if (act.days) {
+    for (let i = 0; i < 7; i++) {
+      document.getElementById('day' + i).checked = act.days.includes(i);
+    }
+  }
   document.getElementById('activityModalLabel').innerText = 'Editar Atividade';
   document.getElementById('activityModal').setAttribute('data-edit-idx', idx);
   let modal = new bootstrap.Modal(document.getElementById('activityModal'));
   modal.show();
 };
 
-// Excluir atividade
-window.deleteActivity = function(idx) {
-  if (!confirm('Deseja realmente excluir esta atividade?')) return;
+// Modal de confirmação de exclusão
+function showDeleteModal(idx) {
+  let modalDiv = document.getElementById('deleteModal');
+  if (!modalDiv) {
+    modalDiv = document.createElement('div');
+    modalDiv.id = 'deleteModal';
+    modalDiv.className = 'modal fade';
+    modalDiv.tabIndex = -1;
+    modalDiv.innerHTML = `
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background:#23272b; color:#2ecc71;">
+          <div class="modal-header" style="background:#181a1b; color:#2ecc71;">
+            <h5 class="modal-title">Confirmar exclusão</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(60%) sepia(100%) saturate(500%) hue-rotate(90deg);"></button>
+          </div>
+          <div class="modal-body text-center">
+            <div class="mb-3"><i class="bi bi-exclamation-triangle" style="font-size:2.5rem;color:#2ecc71;"></i></div>
+            <div>Tem certeza que deseja excluir esta atividade?</div>
+          </div>
+          <div class="modal-footer justify-content-center">
+            <button type="button" class="btn btn-outline-success" id="confirmDeleteBtn">Confirmar</button>
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modalDiv);
+  }
+  let modal = new bootstrap.Modal(modalDiv);
+  modal.show();
+  document.getElementById('confirmDeleteBtn').onclick = function() {
+    modal.hide();
+    deleteActivityConfirmed(idx);
+  };
+}
+
+// Função chamada após confirmação
+function deleteActivityConfirmed(idx) {
   let users = JSON.parse(localStorage.getItem('users') || '[]');
   let user = users.find(u => u.email === currentUser.email);
   if (!user) return;
@@ -252,7 +318,7 @@ window.deleteActivity = function(idx) {
   currentUser = user;
   localStorage.setItem('currentUser', JSON.stringify(user));
   loadRoutine();
-};
+}
 
 // --- Gamificação: Pontos, Níveis, Conquistas, Estatísticas ---
 
@@ -268,14 +334,19 @@ function completeActivity(idx) {
     act.completed = today;
     // Pontualidade: dentro do horário de término
     const end = new Date(now.toISOString().slice(0,10) + 'T' + act.end);
+    let points = 0;
+    let msg = '';
     if (now <= end) {
       user.points += 10;
-      showToast('Parabéns! Você concluiu no horário e ganhou 10 pontos!');
+      points = 10;
+      msg = 'Você concluiu sua atividade no horário!<br><strong>+10 pontos</strong><br>Continue assim, disciplina é a chave do sucesso!';
       checkTrophies(user);
     } else {
       user.points += 5;
-      showToast('Atividade concluída! Você ganhou 5 pontos.');
+      points = 5;
+      msg = 'Atividade concluída!<br><strong>+5 pontos</strong><br>Lembre-se: o importante é não desistir!';
     }
+    showCongratsModal(msg);
   }
   localStorage.setItem('users', JSON.stringify(users));
   currentUser = user;
@@ -342,7 +413,7 @@ function loadStats() {
           </div>
           <div>
             <strong>Conquistas:</strong><br>
-            ${currentUser.trophies && currentUser.trophies.length ? currentUser.trophies.map(t=>`<span class='badge bg-success me-1'>${t}</span>`).join('') : '<span class="text-muted">Nenhuma</span>'}
+            ${currentUser.trophies && currentUser.trophies.length ? currentUser.trophies.map(t=>`<span class='badge bg-success me-1'>${t}</span>`).join('') : '<span class="text-white">Nenhuma</span>'}
           </div>
         </div>
         <hr>
@@ -371,24 +442,6 @@ function showMotivationalMsg(level, completed, total) {
 }
 
 // --- Tema Claro/Escuro ---
-const themeToggle = document.getElementById('themeToggle');
-if (themeToggle) {
-  themeToggle.onclick = function() {
-    document.body.classList.toggle('dark-mode');
-    if (document.body.classList.contains('dark-mode')) {
-      themeToggle.innerText = '☀️';
-      localStorage.setItem('theme', 'dark');
-    } else {
-      themeToggle.innerText = '🌙';
-      localStorage.setItem('theme', 'light');
-    }
-  };
-  // Carrega tema salvo
-  if (localStorage.getItem('theme') === 'dark') {
-    document.body.classList.add('dark-mode');
-    themeToggle.innerText = '☀️';
-  }
-}
 
 // Toasts centralizados no container
 function showToast(msg) {
@@ -396,7 +449,7 @@ function showToast(msg) {
   const toast = document.createElement('div');
   toast.className = 'toast align-items-center text-white bg-primary border-0 mb-2';
   toast.role = 'alert';
-  toast.innerHTML = `<div class="d-flex"><div class="toast-body">${msg}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>`;
+  toast.innerHTML = `<div class=\"d-flex\"><div class=\"toast-body\">${msg}</div><button type=\"button\" class=\"btn-close btn-close-white me-2 m-auto\" data-bs-dismiss=\"toast\"></button></div>`;
   toastContainer.appendChild(toast);
   let bsToast = new bootstrap.Toast(toast, { delay: 3000 });
   bsToast.show();
@@ -404,30 +457,6 @@ function showToast(msg) {
 }
 
 // Adiciona botão de concluir atividade na rotina
-(function enhanceRoutineList() {
-  const origLoadRoutine = loadRoutine;
-  window.loadRoutine = function() {
-    origLoadRoutine();
-    let users = JSON.parse(localStorage.getItem('users') || '[]');
-    let user = users.find(u => u.email === (currentUser && currentUser.email));
-    if (!user || !user.routine.length) return;
-    const routineList = document.getElementById('routine-list');
-    Array.from(routineList.children).forEach((card, idx) => {
-      if (!user.routine[idx].completed) {
-        const btn = document.createElement('button');
-        btn.className = 'btn btn-sm btn-success ms-2';
-        btn.innerText = 'Concluir';
-        btn.onclick = function() { completeActivity(idx); };
-        card.querySelector('.card-body > div:last-child').appendChild(btn);
-      } else {
-        const badge = document.createElement('span');
-        badge.className = 'badge bg-success ms-2';
-        badge.innerText = 'Concluída';
-        card.querySelector('.card-body > div:last-child').appendChild(badge);
-      }
-    });
-  };
-})();
 
 // --- Integração Google Calendar e Notificações ---
 
@@ -458,23 +487,6 @@ function addEventToGoogleCalendar(activity) {
 }
 
 // Adiciona botão de adicionar evento em cada atividade
-(function enhanceRoutineListGoogle() {
-  const origLoadRoutine = window.loadRoutine;
-  window.loadRoutine = function() {
-    origLoadRoutine();
-    let users = JSON.parse(localStorage.getItem('users') || '[]');
-    let user = users.find(u => u.email === (currentUser && currentUser.email));
-    if (!user || !user.routine.length) return;
-    const routineList = document.getElementById('routine-list');
-    Array.from(routineList.children).forEach((card, idx) => {
-      const btn = document.createElement('button');
-      btn.className = 'btn btn-sm btn-outline-info ms-2';
-      btn.innerText = 'Google Calendar';
-      btn.onclick = function() { addEventToGoogleCalendar(user.routine[idx]); };
-      card.querySelector('.card-body > div:last-child').appendChild(btn);
-    });
-  };
-})();
 
 // Notificações no navegador para início de atividade
 function scheduleNotifications() {
@@ -527,7 +539,7 @@ function showProfile() {
           <i class="bi bi-person-circle" style="font-size:2.5rem;color:#007bff;"></i>
         </div>
         <h5 class="card-title mb-1">${currentUser.name}</h5>
-        <p class="text-muted mb-2">${currentUser.email}</p>
+        <p class="text-white mb-2">${currentUser.email}</p>
         <div class="mb-2">
           <span class="badge bg-primary">Nível ${level}</span>
           <span class="badge bg-success">${points} pontos</span>
@@ -536,7 +548,7 @@ function showProfile() {
           <strong>Atividades concluídas:</strong> ${completed} / ${total}
         </div>
         <div class="mb-2">
-          <strong>Conquistas:</strong> ${currentUser.trophies && currentUser.trophies.length ? currentUser.trophies.map(t=>`<span class='badge bg-warning text-dark me-1'>${t}</span>`).join('') : '<span class="text-muted">Nenhuma</span>'}
+          <strong>Conquistas:</strong> ${currentUser.trophies && currentUser.trophies.length ? currentUser.trophies.map(t=>`<span class='badge bg-warning text-white me-1'>${t}</span>`).join('') : '<span class="text-white">Nenhuma</span>'}
         </div>
       </div>
     </div>
@@ -563,6 +575,7 @@ function showScreen(screen) {
     loadScreenHtml('atividades.html', 'screenActivities', () => {
       loadRoutine();
       loadStats();
+      setupActivityListeners();
     });
   } else if (screen === 'profile') {
     document.getElementById('screenProfile').classList.remove('d-none');
@@ -634,3 +647,142 @@ function showAchievements() {
     `;
   }).join('') + '</div>';
 }
+
+// Garante que os event listeners do botão de adicionar atividade e do formulário sejam reatribuídos após carregar a tela de atividades dinamicamente.
+function setupActivityListeners() {
+  const addActivityBtn = document.getElementById('addActivityBtn');
+  if (addActivityBtn) {
+    addActivityBtn.onclick = function() {
+      document.getElementById('activityForm').reset();
+      document.getElementById('activityModalLabel').innerText = 'Adicionar Atividade';
+      document.getElementById('activityModal').setAttribute('data-edit-idx', '');
+      let modal = new bootstrap.Modal(document.getElementById('activityModal'));
+      modal.show();
+    };
+  }
+  const activityForm = document.getElementById('activityForm');
+  if (activityForm) {
+    activityForm.onsubmit = function(e) {
+      e.preventDefault();
+      const name = document.getElementById('activityName').value.trim();
+      const start = document.getElementById('startTime').value;
+      const end = document.getElementById('endTime').value;
+      const days = getSelectedDays();
+      if (!name || !start || !end) return;
+      if (days.length === 0) {
+        alert('Selecione pelo menos um dia da semana para a atividade.');
+        return;
+      }
+      let users = JSON.parse(localStorage.getItem('users') || '[]');
+      let user = users.find(u => u.email === currentUser.email);
+      if (!user) return;
+      const editIdx = document.getElementById('activityModal').getAttribute('data-edit-idx');
+      if (editIdx === '') {
+        // Adiciona nova atividade
+        user.routine.push({ name, start, end, days });
+      } else {
+        // Edita atividade existente
+        user.routine[editIdx] = { name, start, end, days };
+      }
+      localStorage.setItem('users', JSON.stringify(users));
+      currentUser = user;
+      localStorage.setItem('currentUser', JSON.stringify(user));
+      loadRoutine();
+      let modal = bootstrap.Modal.getInstance(document.getElementById('activityModal'));
+      modal.hide();
+    };
+  }
+}
+
+// Modal de parabéns ao concluir atividade com bg escuro e texto esmeralda
+function showCongratsModal(msg) {
+  let modalDiv = document.getElementById('congratsModal');
+  if (!modalDiv) {
+    modalDiv = document.createElement('div');
+    modalDiv.id = 'congratsModal';
+    modalDiv.className = 'modal fade';
+    modalDiv.tabIndex = -1;
+    modalDiv.innerHTML = `
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background:#23272b; color:#2ecc71;">
+          <div class="modal-header" style="background:#181a1b; color:#2ecc71;">
+            <h5 class="modal-title">Parabéns!</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(60%) sepia(100%) saturate(500%) hue-rotate(90deg);"></button>
+          </div>
+          <div class="modal-body text-center">
+            <div class="mb-3"><i class="bi bi-emoji-smile" style="font-size:2.5rem;color:#2ecc71;"></i></div>
+            <div id="congratsMsg">${msg}</div>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modalDiv);
+  } else {
+    modalDiv.querySelector('#congratsMsg').innerHTML = msg;
+  }
+  let modal = new bootstrap.Modal(modalDiv);
+  modal.show();
+}
+
+// Função para resetar progresso semanal e atualizar estatísticas
+function resetWeeklyProgress() {
+  let users = JSON.parse(localStorage.getItem('users') || '[]');
+  users.forEach(user => {
+    if (!user.routine) return;
+    // Estatísticas semanais
+    let weekStats = user.weekStats || [];
+    let completedCount = user.routine.filter(act => act.completed).length;
+    let weekNumber = getWeekNumber(new Date());
+    weekStats.push({ week: weekNumber, completed: completedCount });
+    user.weekStats = weekStats;
+    // Estatísticas mensais
+    let monthStats = user.monthStats || [];
+    let month = new Date().getMonth();
+    let year = new Date().getFullYear();
+    let monthKey = `${year}-${month}`;
+    let monthEntry = monthStats.find(m => m.month === monthKey);
+    if (monthEntry) {
+      monthEntry.completed += completedCount;
+    } else {
+      monthStats.push({ month: monthKey, completed: completedCount });
+    }
+    user.monthStats = monthStats;
+    // Reset progresso semanal
+    user.routine.forEach(act => act.completed = false);
+  });
+  localStorage.setItem('users', JSON.stringify(users));
+  if (currentUser) {
+    currentUser = users.find(u => u.email === currentUser.email);
+    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    loadRoutine();
+  }
+}
+
+// Função para obter número da semana do ano
+function getWeekNumber(d) {
+  d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
+  var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+  var weekNo = Math.ceil((((d - yearStart) / 86400000) + 1)/7);
+  return `${d.getUTCFullYear()}-W${weekNo}`;
+}
+
+// Agenda reset semanal toda segunda-feira às 00:00
+function scheduleWeeklyReset() {
+  const now = new Date();
+  // Próxima segunda-feira às 00:00
+  let daysUntilMonday = (8 - now.getDay()) % 7;
+  const nextMonday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysUntilMonday, 0, 0, 0);
+  const msUntilMonday = nextMonday - now;
+  setTimeout(() => {
+    resetWeeklyProgress();
+    scheduleWeeklyReset();
+  }, msUntilMonday + 1000);
+}
+
+// Inicialização
+window.addEventListener('DOMContentLoaded', () => {
+  loadRoutine();
+  scheduleMidnightUpdate();
+  scheduleWeeklyReset();
+});
