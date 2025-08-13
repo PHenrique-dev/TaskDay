@@ -18,8 +18,8 @@ function showSection(section) {
 // Usuário logado
 let currentUser = null;
 
-// Carrega usuário logado se "manter logado" estiver ativo
-window.onload = function() {
+window.addEventListener('DOMContentLoaded', () => {
+  // Carrega usuário logado se "manter logado" estiver ativo
   const keepLogged = localStorage.getItem('keepLogged');
   const user = localStorage.getItem('currentUser');
   if (keepLogged && user) {
@@ -33,28 +33,112 @@ window.onload = function() {
     showSection('auth');
     updateNavbarOnLogout();
   }
-};
 
-// Cadastro de usuário
-const registerForm = document.getElementById('register-form');
-if (registerForm) {
-  registerForm.addEventListener('submit', function(e) {
-    e.preventDefault();
-    const name = document.getElementById('registerName').value.trim();
-    const email = document.getElementById('registerEmail').value.trim();
-    const password = document.getElementById('registerPassword').value;
-    if (!name || !email || !password) return;
-    let users = JSON.parse(localStorage.getItem('users') || '[]');
-    if (users.find(u => u.email === email)) {
-      alert('Email já cadastrado!');
-      return;
-    }
-    users.push({ name, email, password, routine: [], points: 0, trophies: [] });
-    localStorage.setItem('users', JSON.stringify(users));
-    alert('Cadastro realizado com sucesso!');
-    document.getElementById('show-login').click();
-  });
-}
+  // Login de usuário
+  const loginForm = document.getElementById('login-form');
+  if (loginForm) {
+    loginForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      const keepLogged = document.getElementById('keepLogged').checked;
+      let users = JSON.parse(localStorage.getItem('users') || '[]');
+      const user = users.find(u => u.email === email && u.password === password);
+      if (!user) {
+        alert('Email ou senha inválidos!');
+        return;
+      }
+      currentUser = user;
+      localStorage.setItem('currentUser', JSON.stringify(user));
+      if (keepLogged) {
+        localStorage.setItem('keepLogged', 'true');
+      } else {
+        localStorage.removeItem('keepLogged');
+      }
+      showSection('dashboard');
+      updateNavbarOnLogin(user);
+      loadRoutine();
+      loadStats();
+      updateWelcome(user);
+    });
+  }
+  // Cadastro de usuário
+  const registerForm = document.getElementById('register-form');
+  if (registerForm) {
+    registerForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const name = document.getElementById('registerName').value.trim();
+      const email = document.getElementById('registerEmail').value.trim();
+      const password = document.getElementById('registerPassword').value;
+      if (!name || !email || !password) return;
+      let users = JSON.parse(localStorage.getItem('users') || '[]');
+      if (users.find(u => u.email === email)) {
+        alert('Email já cadastrado!');
+        return;
+      }
+      users.push({ name, email, password, routine: [], points: 0, trophies: [] });
+      localStorage.setItem('users', JSON.stringify(users));
+      alert('Cadastro realizado com sucesso!');
+      document.getElementById('show-login').click();
+    });
+  }
+  // Alternância entre login/cadastro
+  const showRegister = document.getElementById('show-register');
+  if (showRegister) {
+    showRegister.onclick = function(e) {
+      e.preventDefault();
+      document.getElementById('login-form').parentElement.parentElement.style.display = 'none';
+      document.getElementById('register-card').style.display = 'block';
+    };
+  }
+  const showLogin = document.getElementById('show-login');
+  if (showLogin) {
+    showLogin.onclick = function(e) {
+      e.preventDefault();
+      document.getElementById('register-card').style.display = 'none';
+      document.getElementById('login-form').parentElement.parentElement.style.display = 'block';
+    };
+  }
+  // Navbar: Login/Cadastro
+  const navLogin = document.getElementById('navLogin');
+  if (navLogin) {
+    navLogin.onclick = function(e) {
+      e.preventDefault();
+      showSection('auth');
+      document.getElementById('register-card').style.display = 'none';
+      document.getElementById('login-form').parentElement.parentElement.style.display = 'block';
+    };
+  }
+  const navRegister = document.getElementById('navRegister');
+  if (navRegister) {
+    navRegister.onclick = function(e) {
+      e.preventDefault();
+      showSection('auth');
+      document.getElementById('login-form').parentElement.parentElement.style.display = 'none';
+      document.getElementById('register-card').style.display = 'block';
+    };
+  }
+  // Inicializa exibição correta
+  if (showRegister && showLogin) {
+    document.getElementById('register-card').style.display = 'none';
+    document.getElementById('login-form').parentElement.parentElement.style.display = 'block';
+  }
+  // Logout
+  const logoutBtn = document.getElementById('navLogout');
+  if (logoutBtn) {
+    logoutBtn.onclick = function() {
+      localStorage.removeItem('currentUser');
+      localStorage.removeItem('keepLogged');
+      currentUser = null;
+      showSection('auth');
+      updateNavbarOnLogout();
+    };
+  }
+  // Inicialização das rotinas e resets
+  loadRoutine();
+  scheduleMidnightUpdate();
+  scheduleWeeklyReset();
+});
 
 // Login de usuário
 const loginForm = document.getElementById('login-form');
@@ -85,24 +169,48 @@ if (loginForm) {
   });
 }
 
+// Cadastro de usuário
+const registerForm = document.getElementById('register-form');
+if (registerForm) {
+  registerForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const name = document.getElementById('registerName').value.trim();
+    const email = document.getElementById('registerEmail').value.trim();
+    const password = document.getElementById('registerPassword').value;
+    if (!name || !email || !password) return;
+    let users = JSON.parse(localStorage.getItem('users') || '[]');
+    if (users.find(u => u.email === email)) {
+      alert('Email já cadastrado!');
+      return;
+    }
+    users.push({ name, email, password, routine: [], points: 0, trophies: [] });
+    localStorage.setItem('users', JSON.stringify(users));
+    alert('Cadastro realizado com sucesso!');
+    document.getElementById('show-login').click();
+  });
+}
+
 // Alterna entre login/cadastro
 const showRegister = document.getElementById('show-register');
 if (showRegister) {
-  showRegister.onclick = function() {
-    document.querySelector('#register-form').parentElement.parentElement.style.display = 'block';
-    document.querySelector('#login-form').parentElement.parentElement.style.display = 'none';
+  showRegister.onclick = function(e) {
+    e.preventDefault();
+    document.getElementById('login-form').parentElement.parentElement.style.display = 'none';
+    document.getElementById('register-card').style.display = 'block';
   };
 }
 const showLogin = document.getElementById('show-login');
 if (showLogin) {
-  showLogin.onclick = function() {
-    document.querySelector('#login-form').parentElement.parentElement.style.display = 'block';
-    document.querySelector('#register-form').parentElement.parentElement.style.display = 'none';
+  showLogin.onclick = function(e) {
+    e.preventDefault();
+    document.getElementById('register-card').style.display = 'none';
+    document.getElementById('login-form').parentElement.parentElement.style.display = 'block';
   };
 }
 // Inicializa exibição correta
 if (showRegister && showLogin) {
-  document.querySelector('#register-form').parentElement.parentElement.style.display = 'none';
+  document.getElementById('register-card').style.display = 'none';
+  document.getElementById('login-form').parentElement.parentElement.style.display = 'block';
 }
 
 // Logout
@@ -328,12 +436,12 @@ function completeActivity(idx) {
   if (!user) return;
   const act = user.routine[idx];
   const now = new Date();
-  const today = now.toISOString().slice(0,10);
+  const todayStr = now.toISOString().slice(0,10);
   // Marca como concluída e verifica pontualidade
   if (!act.completed) {
-    act.completed = today;
+    act.completed = todayStr;
     // Pontualidade: dentro do horário de término
-    const end = new Date(now.toISOString().slice(0,10) + 'T' + act.end);
+    const end = new Date(todayStr + 'T' + act.end);
     let points = 0;
     let msg = '';
     if (now <= end) {
@@ -349,14 +457,12 @@ function completeActivity(idx) {
     showCongratsModal(msg);
   }
   // Histórico diário
-  let today = new Date();
-  let dayKey = today.toISOString().slice(0, 10);
   user.dailyStats = user.dailyStats || [];
-  let dayEntry = user.dailyStats.find(d => d.day === dayKey);
+  let dayEntry = user.dailyStats.find(d => d.day === todayStr);
   if (dayEntry) {
     dayEntry.completed += 1;
   } else {
-    user.dailyStats.push({ day: dayKey, completed: 1 });
+    user.dailyStats.push({ day: todayStr, completed: 1 });
   }
   localStorage.setItem('users', JSON.stringify(users));
   currentUser = user;
@@ -365,148 +471,16 @@ function completeActivity(idx) {
   loadStats();
 }
 
-function checkTrophies(user) {
-  // Troféus simples: 100 pontos, 10 atividades concluídas, 7 dias seguidos
-  if (user.points >= 100 && !user.trophies.includes('100 pontos')) {
-    user.trophies.push('100 pontos');
-    showToast('Troféu desbloqueado: 100 pontos!');
-  }
-  const completedCount = user.routine.filter(a => a.completed).length;
-  if (completedCount >= 10 && !user.trophies.includes('10 atividades')) {
-    user.trophies.push('10 atividades');
-    showToast('Troféu desbloqueado: 10 atividades concluídas!');
-  }
-  // 7 dias seguidos
-  let days = {};
-  user.routine.forEach(a => { if (a.completed) days[a.completed]=true; });
-  if (Object.keys(days).length >= 7 && !user.trophies.includes('7 dias seguidos')) {
-    user.trophies.push('7 dias seguidos');
-    showToast('Troféu desbloqueado: 7 dias seguidos!');
-  }
-}
-
-function getLevel(points) {
-  if (points < 50) return 1;
-  if (points < 150) return 2;
-  if (points < 300) return 3;
-  return 4;
-}
-
-function loadStats() {
-  if (!currentUser) return;
-  const statsDiv = document.getElementById('stats');
-  const points = currentUser.points || 0;
-  const level = getLevel(points);
-  const completed = (currentUser.routine||[]).filter(a => a.completed).length;
-  const total = (currentUser.routine||[]).length;
-  // Estatísticas semanais/mensais
-  const now = new Date();
-  const weekStart = new Date(now);
-  weekStart.setDate(now.getDate() - now.getDay());
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  let weekCount = 0, monthCount = 0;
-  (currentUser.routine||[]).forEach(a => {
-    if (a.completed) {
-      const d = new Date(a.completed);
-      if (d >= weekStart) weekCount++;
-      if (d >= monthStart) monthCount++;
-    }
-  });
-  statsDiv.innerHTML = `
-    <div class="card">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center">
-          <div>
-            <strong>Pontos:</strong> ${points}<br>
-            <strong>Nível:</strong> ${level}<br>
-            <strong>Atividades concluídas:</strong> ${completed}/${total}
-          </div>
-          <div>
-            <strong>Conquistas:</strong><br>
-            ${currentUser.trophies && currentUser.trophies.length ? currentUser.trophies.map(t=>`<span class='badge bg-success me-1'>${t}</span>`).join('') : '<span class="text-white">Nenhuma</span>'}
-          </div>
-        </div>
-        <hr>
-        <div>
-          <strong>Semana:</strong> ${weekCount} atividades<br>
-          <strong>Mês:</strong> ${monthCount} atividades
-        </div>
-        <div class="mt-2 text-center">
-          <span id="motivationalMsg"></span>
-        </div>
-      </div>
-    </div>
-  `;
-  showMotivationalMsg(level, completed, total);
-}
-
-function showMotivationalMsg(level, completed, total) {
-  const msgEl = document.getElementById('motivationalMsg');
-  let msg = '';
-  if (completed === total && total > 0) msg = 'Rotina concluída! Você é incrível!';
-  else if (level === 1) msg = 'Comece pequeno, mas não pare!';
-  else if (level === 2) msg = 'Ótimo progresso! Continue assim!';
-  else if (level === 3) msg = 'Você está dominando sua rotina!';
-  else if (level === 4) msg = 'Exemplo de disciplina! Parabéns!';
-  msgEl.innerText = msg;
-}
-
-// --- Tema Claro/Escuro ---
-
-// Toasts centralizados no container
-function showToast(msg) {
-  const toastContainer = document.getElementById('toastContainer');
-  const toast = document.createElement('div');
-  toast.className = 'toast align-items-center text-white bg-primary border-0 mb-2';
-  toast.role = 'alert';
-  toast.innerHTML = `<div class=\"d-flex\"><div class=\"toast-body\">${msg}</div><button type=\"button\" class=\"btn-close btn-close-white me-2 m-auto\" data-bs-dismiss=\"toast\"></button></div>`;
-  toastContainer.appendChild(toast);
-  let bsToast = new bootstrap.Toast(toast, { delay: 3000 });
-  bsToast.show();
-  toast.addEventListener('hidden.bs.toast', () => toast.remove());
-}
-
-// Adiciona botão de concluir atividade na rotina
-
-// --- Integração Google Calendar e Notificações ---
-
-// Adiciona botão de sincronizar Google Calendar no dashboard
-(function addGoogleCalendarBtn() {
-  const dashboard = document.getElementById('dashboard-section');
-  if (dashboard && !document.getElementById('googleSyncBtn')) {
-    const btn = document.createElement('button');
-    btn.id = 'googleSyncBtn';
-    btn.className = 'btn btn-outline-info w-100 mb-3';
-    btn.innerText = 'Sincronizar com Google Calendar';
-    btn.onclick = function() { googleAuth(); };
-    dashboard.insertBefore(btn, dashboard.firstChild);
-  }
-})();
-
-// Estrutura OAuth2 Google (front-end)
-function googleAuth() {
-  showToast('Funcionalidade de autenticação Google em desenvolvimento.');
-  // Aqui será implementado o fluxo OAuth2
-  // window.open('https://accounts.google.com/o/oauth2/v2/auth?...', '_blank');
-}
-
-// Adicionar evento ao Google Calendar
-function addEventToGoogleCalendar(activity) {
-  showToast('Adicionar evento ao Google Calendar em desenvolvimento.');
-  // Aqui será implementada a chamada à API do Google Calendar
-}
-
-// Adiciona botão de adicionar evento em cada atividade
-
 // Notificações no navegador para início de atividade
 function scheduleNotifications() {
   if (!currentUser || !currentUser.routine) return;
   if (!('Notification' in window)) return;
+  const today = getTodayWeekday();
   currentUser.routine.forEach((act, idx) => {
-    if (act.completed) return;
+    if (act.completed || !act.days || !act.days.includes(today)) return;
     const now = new Date();
-    const today = now.toISOString().slice(0,10);
-    const start = new Date(today + 'T' + act.start);
+    const todayStr = now.toISOString().slice(0,10);
+    const start = new Date(todayStr + 'T' + act.start);
     const diff = start - now;
     if (diff > 0 && diff < 3600000) { // até 1h antes
       setTimeout(() => {
@@ -519,11 +493,29 @@ function scheduleNotifications() {
 }
 
 // Solicita permissão de notificação ao logar
-(function askNotificationPermission() {
+function askNotificationPermission() {
   if ('Notification' in window && Notification.permission !== 'granted') {
     Notification.requestPermission();
   }
-})();
+}
+
+// Chama ao logar
+window.addEventListener('DOMContentLoaded', () => {
+  askNotificationPermission();
+  // ...existing code...
+});
+
+// Exibe mensagem de parabéns ao concluir todas do dia
+function showMotivationalMsg(level, completed, total) {
+  const msgEl = document.getElementById('motivationalMsg');
+  let msg = '';
+  if (completed === total && total > 0) msg = 'Parabéns! Você concluiu todas as atividades do dia!';
+  else if (level === 1) msg = 'Comece pequeno, mas não pare!';
+  else if (level === 2) msg = 'Ótimo progresso! Continue assim!';
+  else if (level === 3) msg = 'Você está dominando sua rotina!';
+  else if (level === 4) msg = 'Exemplo de disciplina! Parabéns!';
+  msgEl.innerText = msg;
+}
 
 // Agenda notificações ao carregar rotina
 (function autoScheduleNotifications() {
@@ -639,11 +631,14 @@ function showScreen(screen) {
     loadScreenHtml('atividades.html', 'screenActivities', () => {
       loadRoutine();
       loadStats();
-      setupActivityListeners();
+      setupActivityListeners(); // Garante listeners após carregar tela
     });
   } else if (screen === 'profile') {
     document.getElementById('screenProfile').classList.remove('d-none');
-    loadScreenHtml('perfil.html', 'screenProfile', showProfile);
+    loadScreenHtml('perfil.html', 'screenProfile', () => {
+      showProfile();
+      showPerformanceCharts();
+    });
   } else if (screen === 'achievements') {
     document.getElementById('screenAchievements').classList.remove('d-none');
     loadScreenHtml('conquistas.html', 'screenAchievements', showAchievements);
@@ -846,6 +841,122 @@ function scheduleWeeklyReset() {
 
 // Inicialização
 window.addEventListener('DOMContentLoaded', () => {
+  // Carrega usuário logado se "manter logado" estiver ativo
+  const keepLogged = localStorage.getItem('keepLogged');
+  const user = localStorage.getItem('currentUser');
+  if (keepLogged && user) {
+    currentUser = JSON.parse(user);
+    showSection('dashboard');
+    updateNavbarOnLogin(currentUser);
+    loadRoutine();
+    loadStats();
+    updateWelcome(currentUser);
+  } else {
+    showSection('auth');
+    updateNavbarOnLogout();
+  }
+
+  // Login de usuário
+  const loginForm = document.getElementById('login-form');
+  if (loginForm) {
+    loginForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      const keepLogged = document.getElementById('keepLogged').checked;
+      let users = JSON.parse(localStorage.getItem('users') || '[]');
+      const user = users.find(u => u.email === email && u.password === password);
+      if (!user) {
+        alert('Email ou senha inválidos!');
+        return;
+      }
+      currentUser = user;
+      localStorage.setItem('currentUser', JSON.stringify(user));
+      if (keepLogged) {
+        localStorage.setItem('keepLogged', 'true');
+      } else {
+        localStorage.removeItem('keepLogged');
+      }
+      showSection('dashboard');
+      updateNavbarOnLogin(user);
+      loadRoutine();
+      loadStats();
+      updateWelcome(user);
+    });
+  }
+  // Cadastro de usuário
+  const registerForm = document.getElementById('register-form');
+  if (registerForm) {
+    registerForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const name = document.getElementById('registerName').value.trim();
+      const email = document.getElementById('registerEmail').value.trim();
+      const password = document.getElementById('registerPassword').value;
+      if (!name || !email || !password) return;
+      let users = JSON.parse(localStorage.getItem('users') || '[]');
+      if (users.find(u => u.email === email)) {
+        alert('Email já cadastrado!');
+        return;
+      }
+      users.push({ name, email, password, routine: [], points: 0, trophies: [] });
+      localStorage.setItem('users', JSON.stringify(users));
+      alert('Cadastro realizado com sucesso!');
+      document.getElementById('show-login').click();
+    });
+  }
+  // Alternância entre login/cadastro
+  const showRegister = document.getElementById('show-register');
+  if (showRegister) {
+    showRegister.onclick = function(e) {
+      e.preventDefault();
+      document.getElementById('login-form').parentElement.parentElement.style.display = 'none';
+      document.getElementById('register-card').style.display = 'block';
+    };
+  }
+  const showLogin = document.getElementById('show-login');
+  if (showLogin) {
+    showLogin.onclick = function(e) {
+      e.preventDefault();
+      document.getElementById('register-card').style.display = 'none';
+      document.getElementById('login-form').parentElement.parentElement.style.display = 'block';
+    };
+  }
+  // Navbar: Login/Cadastro
+  const navLogin = document.getElementById('navLogin');
+  if (navLogin) {
+    navLogin.onclick = function(e) {
+      e.preventDefault();
+      showSection('auth');
+      document.getElementById('register-card').style.display = 'none';
+      document.getElementById('login-form').parentElement.parentElement.style.display = 'block';
+    };
+  }
+  const navRegister = document.getElementById('navRegister');
+  if (navRegister) {
+    navRegister.onclick = function(e) {
+      e.preventDefault();
+      showSection('auth');
+      document.getElementById('login-form').parentElement.parentElement.style.display = 'none';
+      document.getElementById('register-card').style.display = 'block';
+    };
+  }
+  // Inicializa exibição correta
+  if (showRegister && showLogin) {
+    document.getElementById('register-card').style.display = 'none';
+    document.getElementById('login-form').parentElement.parentElement.style.display = 'block';
+  }
+  // Logout
+  const logoutBtn = document.getElementById('navLogout');
+  if (logoutBtn) {
+    logoutBtn.onclick = function() {
+      localStorage.removeItem('currentUser');
+      localStorage.removeItem('keepLogged');
+      currentUser = null;
+      showSection('auth');
+      updateNavbarOnLogout();
+    };
+  }
+  // Inicialização das rotinas e resets
   loadRoutine();
   scheduleMidnightUpdate();
   scheduleWeeklyReset();
