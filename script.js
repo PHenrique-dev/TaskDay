@@ -431,44 +431,97 @@ function deleteActivityConfirmed(idx) {
 // --- Gamificação: Pontos, Níveis, Conquistas, Estatísticas ---
 
 function completeActivity(idx) {
-  let users = JSON.parse(localStorage.getItem('users') || '[]');
-  let user = users.find(u => u.email === currentUser.email);
-  if (!user) return;
-  const act = user.routine[idx];
-  const now = new Date();
-  const todayStr = now.toISOString().slice(0,10);
-  // Marca como concluída e verifica pontualidade
-  if (!act.completed) {
-    act.completed = todayStr;
-    // Pontualidade: dentro do horário de término
-    const end = new Date(todayStr + 'T' + act.end);
-    let points = 0;
-    let msg = '';
-    if (now <= end) {
-      user.points += 10;
-      points = 10;
-      msg = 'Você concluiu sua atividade no horário!<br><strong>+10 pontos</strong><br>Continue assim, disciplina é a chave do sucesso!';
-      checkTrophies(user);
-    } else {
-      user.points += 5;
-      points = 5;
-      msg = 'Atividade concluída!<br><strong>+5 pontos</strong><br>Lembre-se: o importante é não desistir!';
+  // Modal de confirmação para concluir atividade
+  let confirmModal = document.getElementById('completeModal');
+  if (!confirmModal) {
+    confirmModal = document.createElement('div');
+    confirmModal.id = 'completeModal';
+    confirmModal.className = 'modal fade';
+    confirmModal.tabIndex = -1;
+    confirmModal.innerHTML = `
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background:#23272b; color:#2ecc71;">
+          <div class="modal-header" style="background:#181a1b; color:#2ecc71;">
+            <h5 class="modal-title">Confirmar conclusão</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(60%) sepia(100%) saturate(500%) hue-rotate(90deg);"></button>
+          </div>
+          <div class="modal-body text-center">
+            <div class="mb-3"><i class="bi bi-check-circle" style="font-size:2.5rem;color:#2ecc71;"></i></div>
+            <div>Deseja marcar esta atividade como concluída?</div>
+          </div>
+          <div class="modal-footer justify-content-center">
+            <button type="button" class="btn btn-outline-success" id="confirmCompleteBtn">Confirmar</button>
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(confirmModal);
+  }
+  let modal = new bootstrap.Modal(confirmModal);
+  modal.show();
+  document.getElementById('confirmCompleteBtn').onclick = function() {
+    modal.hide();
+    let users = JSON.parse(localStorage.getItem('users') || '[]');
+    let user = users.find(u => u.email === currentUser.email);
+    if (!user) return;
+    const act = user.routine[idx];
+    const now = new Date();
+    const todayStr = now.toISOString().slice(0,10);
+    if (!act.completed) {
+      act.completed = todayStr;
+      const end = new Date(todayStr + 'T' + act.end);
+      let points = 0;
+      let msg = '';
+      if (now <= end) {
+        user.points += 10;
+        points = 10;
+        msg = 'Você concluiu sua atividade no horário!<br><strong>+10 pontos</strong><br>Continue assim, disciplina é a chave do sucesso!';
+        checkTrophies(user);
+      } else {
+        user.points += 5;
+        points = 5;
+        msg = 'Atividade concluída!<br><strong>+5 pontos</strong><br>Lembre-se: o importante é não desistir!';
+      }
+      let streak = getConsecutiveDays(user);
+      if (streak > 1) {
+        let bonus = streak * 2;
+        user.points += bonus;
+        msg += `<br><strong>Bônus de Consistência: +${bonus} pontos (${streak} dias consecutivos)</strong>`;
+        if (streak >= 7 && !user.trophies.includes('Semana perfeita')) {
+          user.trophies.push('Semana perfeita');
+          showToast('Conquista desbloqueada: Semana perfeita!');
+        }
+      }
+      showCongratsModal(msg);
     }
-    showCongratsModal(msg);
+    user.dailyStats = user.dailyStats || [];
+    let dayEntry = user.dailyStats.find(d => d.day === todayStr);
+    if (dayEntry) {
+      dayEntry.completed += 1;
+    } else {
+      user.dailyStats.push({ day: todayStr, completed: 1 });
+    }
+    localStorage.setItem('users', JSON.stringify(users));
+    currentUser = user;
+    localStorage.setItem('currentUser', JSON.stringify(user));
+    loadRoutine();
+    loadStats();
+  };
+}
+
+// Calcula dias consecutivos de conclusão
+function getConsecutiveDays(user) {
+  const stats = (user.dailyStats || []).map(d => d.day).sort();
+  if (stats.length === 0) return 0;
+  let streak = 1;
+  for (let i = stats.length - 2; i >= 0; i--) {
+    const d1 = new Date(stats[i]);
+    const d2 = new Date(stats[i+1]);
+    if ((d2 - d1) === 86400000) streak++;
+    else break;
   }
-  // Histórico diário
-  user.dailyStats = user.dailyStats || [];
-  let dayEntry = user.dailyStats.find(d => d.day === todayStr);
-  if (dayEntry) {
-    dayEntry.completed += 1;
-  } else {
-    user.dailyStats.push({ day: todayStr, completed: 1 });
-  }
-  localStorage.setItem('users', JSON.stringify(users));
-  currentUser = user;
-  localStorage.setItem('currentUser', JSON.stringify(user));
-  loadRoutine();
-  loadStats();
+  return streak;
 }
 
 // Notificações no navegador para início de atividade

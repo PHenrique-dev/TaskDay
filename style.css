@@ -1,91 +1,106 @@
-/* Identidade visual TaskDay */
+/* Identidade visual TaskDay - Cinza escuro e Verde Esmeralda */
+:root {
+  --emerald: #2ecc71;
+  --emerald-dark: #219150;
+  --gray-dark: #23272b;
+  --gray-darker: #181a1b;
+  --gray-light: #f8faff;
+  --text-light: #f1f1f1;
+  --text-dark: #222;
+}
 body {
   font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
-  background: linear-gradient(135deg, #e3f0ff 0%, #f8faff 100%);
-  color: #222;
+  background: var(--gray-dark);
+  color: var(--text-light);
 }
-
 .navbar {
-  background: linear-gradient(90deg, #007bff 60%, #00c6ff 100%) !important;
+  background: var(--gray-dark) !important;
   border-radius: 0 0 18px 18px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.07);
 }
-
 .navbar .navbar-brand {
   font-weight: 700;
   letter-spacing: 1px;
   font-size: 1.3rem;
+  color: var(--emerald);
 }
-
 .navbar .nav-link, .navbar .btn {
   font-size: 1rem;
   font-weight: 500;
+  color: var(--emerald) !important;
 }
-
 .dashboard-welcome h4 {
   font-weight: 600;
-  color: #007bff;
+  color: var(--emerald);
 }
-
 .card {
   border-radius: 16px;
   box-shadow: 0 2px 12px rgba(0,0,0,0.06);
   border: none;
+  background: var(--gray-darker);
+  color: var(--text-light);
 }
-
 .profile-card {
-  background: linear-gradient(120deg, #f8faff 60%, #e3f0ff 100%);
+  background: var(--gray-darker);
+  color: var(--text-light);
 }
-
 .achievement-card {
   transition: box-shadow 0.2s;
+  background: var(--gray-darker);
+  color: var(--text-light);
 }
-
+.text-muted{
+    color: var(--text-light)
+}
 .achievement-card:hover {
-  box-shadow: 0 4px 16px rgba(0,123,255,0.12);
+  box-shadow: 0 4px 16px rgba(46,204,113,0.12);
 }
-
 .btn-primary {
-  background: linear-gradient(90deg, #007bff 60%, #00c6ff 100%);
+  background: var(--emerald);
   border: none;
   font-weight: 600;
-}
-
-.btn-success, .badge-success {
-  background: linear-gradient(90deg, #28a745 60%, #a8e063 100%);
-  border: none;
-}
-
-.btn-outline-info {
-  border-color: #00c6ff;
-  color: #007bff;
-}
-
-.btn-outline-info:hover {
-  background: #00c6ff;
   color: #fff;
 }
-
-.badge-warning {
-  background: linear-gradient(90deg, #ffc107 60%, #ffe082 100%);
-  color: #222;
+.btn-success, .badge-success {
+  background: var(--emerald-dark);
+  border: none;
+  color: #fff;
 }
-
+.btn-outline-info {
+  border-color: var(--emerald);
+  color: var(--emerald-dark);
+}
+.btn-outline-info:hover {
+  background: var(--emerald);
+  color: #fff;
+}
+.badge-warning {
+  background: #ffe082;
+  color: var(--gray-dark);
+}
 input, select, textarea {
   border-radius: 8px !important;
+  background: var(--gray-dark);
+  color: var(--text-light);
+  border: 1px solid var(--emerald-dark);
 }
-
+input:focus, select:focus, textarea:focus {
+  border-color: var(--emerald);
+  box-shadow: 0 0 0 2px var(--emerald);
+}
 .toast {
   border-radius: 12px;
   font-size: 1rem;
+  background: var(--emerald-dark) !important;
+  color: #fff !important;
 }
-
-/* Ícones grandes para telas */
 .bi {
   vertical-align: middle;
+  color: var(--emerald);
 }
-
-/* Espaçamento e responsividade */
+.navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30' viewBox='0 0 30 30'%3e%3cpath stroke='%232ecc71' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
 @media (max-width: 576px) {
   .container {
     padding: 0 2px;
@@ -96,34 +111,4 @@ input, select, textarea {
   .dashboard-welcome h4 {
     font-size: 1.1rem;
   }
-}
-
-/* Tema escuro personalizado */
-body.dark-mode {
-  background: linear-gradient(135deg, #23272b 0%, #181a1b 100%);
-  color: #f1f1f1;
-}
-body.dark-mode .navbar {
-  background: linear-gradient(90deg, #222 60%, #444 100%) !important;
-}
-body.dark-mode .card, body.dark-mode .profile-card {
-  background: #23272b;
-  color: #f1f1f1;
-}
-body.dark-mode .dashboard-welcome h4 {
-  color: #00c6ff;
-}
-body.dark-mode .btn-primary {
-  background: linear-gradient(90deg, #0056b3 60%, #00c6ff 100%);
-}
-body.dark-mode .btn-success, body.dark-mode .badge-success {
-  background: linear-gradient(90deg, #218838 60%, #a8e063 100%);
-}
-body.dark-mode .badge-warning {
-  background: linear-gradient(90deg, #ffc107 60%, #ffe082 100%);
-  color: #222;
-}
-body.dark-mode .toast {
-  background-color: #333 !important;
-  color: #fff !important;
 }
