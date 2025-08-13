@@ -37,15 +37,16 @@ const registerForm = document.getElementById('register-form');
 if (registerForm) {
   registerForm.addEventListener('submit', function(e) {
     e.preventDefault();
+    const name = document.getElementById('registerName').value.trim();
     const email = document.getElementById('registerEmail').value.trim();
     const password = document.getElementById('registerPassword').value;
-    if (!email || !password) return;
+    if (!name || !email || !password) return;
     let users = JSON.parse(localStorage.getItem('users') || '[]');
     if (users.find(u => u.email === email)) {
       alert('Email já cadastrado!');
       return;
     }
-    users.push({ email, password, routine: [], points: 0, trophies: [] });
+    users.push({ name, email, password, routine: [], points: 0, trophies: [] });
     localStorage.setItem('users', JSON.stringify(users));
     alert('Cadastro realizado com sucesso!');
     document.getElementById('show-login').click();
