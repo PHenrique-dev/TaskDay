@@ -1,5 +1,13 @@
-// test.js - Testes básicos para TaskDay
-// Simulação de ambiente de testes para funções principais
+// test.js - Testes básicos para TaskDay (Node.js)
+// Mock de localStorage para ambiente Node
+class LocalStorageMock {
+  constructor() { this.store = {}; }
+  clear() { this.store = {}; }
+  getItem(key) { return this.store[key] || null; }
+  setItem(key, value) { this.store[key] = value.toString(); }
+  removeItem(key) { delete this.store[key]; }
+}
+global.localStorage = new LocalStorageMock();
 
 function assertEqual(a, b, msg) {
   if (a !== b) {
