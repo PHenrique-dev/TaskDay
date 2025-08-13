@@ -28,6 +28,7 @@ window.onload = function() {
     updateNavbarOnLogin(currentUser);
     loadRoutine();
     loadStats();
+    updateWelcome(currentUser);
   } else {
     showSection('auth');
     updateNavbarOnLogout();
@@ -80,6 +81,7 @@ if (loginForm) {
     updateNavbarOnLogin(user);
     loadRoutine();
     loadStats();
+    updateWelcome(user);
   });
 }
 
@@ -125,6 +127,17 @@ function updateNavbarOnLogin(user) {
   document.getElementById('navAchievements').classList.remove('d-none');
   document.getElementById('navLogout').classList.remove('d-none');
   document.getElementById('userNameNav').innerText = user.name || user.email;
+  // Saudação no dashboard (opcional)
+  const dashboard = document.getElementById('dashboard-section');
+  if (dashboard) {
+    let welcomeEl = dashboard.querySelector('.dashboard-welcome');
+    if (!welcomeEl) {
+      welcomeEl = document.createElement('div');
+      welcomeEl.className = 'dashboard-welcome text-center mb-3';
+      dashboard.insertBefore(welcomeEl, dashboard.firstChild);
+    }
+    welcomeEl.innerHTML = `<h4>Bem-vindo(a), ${user.name || user.email}!</h4>`;
+  }
 }
 function updateNavbarOnLogout() {
   document.getElementById('navLogin').classList.remove('d-none');
