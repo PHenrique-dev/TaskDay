@@ -214,3 +214,157 @@ window.deleteActivity = function(idx) {
   localStorage.setItem('currentUser', JSON.stringify(user));
   loadRoutine();
 };
+
+// --- Gamificação: Pontos, Níveis, Conquistas, Estatísticas ---
+
+function completeActivity(idx) {
+  let users = JSON.parse(localStorage.getItem('users') || '[]');
+  let user = users.find(u => u.email === currentUser.email);
+  if (!user) return;
+  const act = user.routine[idx];
+  const now = new Date();
+  const today = now.toISOString().slice(0,10);
+  // Marca como concluída e verifica pontualidade
+  if (!act.completed) {
+    act.completed = today;
+    // Pontualidade: dentro do horário de término
+    const end = new Date(now.toISOString().slice(0,10) + 'T' + act.end);
+    if (now <= end) {
+      user.points += 10;
+      showToast('Parabéns! Você concluiu no horário e ganhou 10 pontos!');
+      checkTrophies(user);
+    } else {
+      user.points += 5;
+      showToast('Atividade concluída! Você ganhou 5 pontos.');
+    }
+  }
+  localStorage.setItem('users', JSON.stringify(users));
+  currentUser = user;
+  localStorage.setItem('currentUser', JSON.stringify(user));
+  loadRoutine();
+  loadStats();
+}
+
+function checkTrophies(user) {
+  // Troféus simples: 100 pontos, 10 atividades concluídas, 7 dias seguidos
+  if (user.points >= 100 && !user.trophies.includes('100 pontos')) {
+    user.trophies.push('100 pontos');
+    showToast('Troféu desbloqueado: 100 pontos!');
+  }
+  const completedCount = user.routine.filter(a => a.completed).length;
+  if (completedCount >= 10 && !user.trophies.includes('10 atividades')) {
+    user.trophies.push('10 atividades');
+    showToast('Troféu desbloqueado: 10 atividades concluídas!');
+  }
+  // 7 dias seguidos
+  let days = {};
+  user.routine.forEach(a => { if (a.completed) days[a.completed]=true; });
+  if (Object.keys(days).length >= 7 && !user.trophies.includes('7 dias seguidos')) {
+    user.trophies.push('7 dias seguidos');
+    showToast('Troféu desbloqueado: 7 dias seguidos!');
+  }
+}
+
+function getLevel(points) {
+  if (points < 50) return 1;
+  if (points < 150) return 2;
+  if (points < 300) return 3;
+  return 4;
+}
+
+function loadStats() {
+  if (!currentUser) return;
+  const statsDiv = document.getElementById('stats');
+  const points = currentUser.points || 0;
+  const level = getLevel(points);
+  const completed = (currentUser.routine||[]).filter(a => a.completed).length;
+  const total = (currentUser.routine||[]).length;
+  // Estatísticas semanais/mensais
+  const now = new Date();
+  const weekStart = new Date(now);
+  weekStart.setDate(now.getDate() - now.getDay());
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  let weekCount = 0, monthCount = 0;
+  (currentUser.routine||[]).forEach(a => {
+    if (a.completed) {
+      const d = new Date(a.completed);
+      if (d >= weekStart) weekCount++;
+      if (d >= monthStart) monthCount++;
+    }
+  });
+  statsDiv.innerHTML = `
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <strong>Pontos:</strong> ${points}<br>
+            <strong>Nível:</strong> ${level}<br>
+            <strong>Atividades concluídas:</strong> ${completed}/${total}
+          </div>
+          <div>
+            <strong>Conquistas:</strong><br>
+            ${currentUser.trophies && currentUser.trophies.length ? currentUser.trophies.map(t=>`<span class='badge bg-success me-1'>${t}</span>`).join('') : '<span class="text-muted">Nenhuma</span>'}
+          </div>
+        </div>
+        <hr>
+        <div>
+          <strong>Semana:</strong> ${weekCount} atividades<br>
+          <strong>Mês:</strong> ${monthCount} atividades
+        </div>
+        <div class="mt-2 text-center">
+          <span id="motivationalMsg"></span>
+        </div>
+      </div>
+    </div>
+  `;
+  showMotivationalMsg(level, completed, total);
+}
+
+function showMotivationalMsg(level, completed, total) {
+  const msgEl = document.getElementById('motivationalMsg');
+  let msg = '';
+  if (completed === total && total > 0) msg = 'Rotina concluída! Você é incrível!';
+  else if (level === 1) msg = 'Comece pequeno, mas não pare!';
+  else if (level === 2) msg = 'Ótimo progresso! Continue assim!';
+  else if (level === 3) msg = 'Você está dominando sua rotina!';
+  else if (level === 4) msg = 'Exemplo de disciplina! Parabéns!';
+  msgEl.innerText = msg;
+}
+
+// Toast para notificações rápidas
+function showToast(msg) {
+  const toast = document.createElement('div');
+  toast.className = 'toast align-items-center text-white bg-primary border-0 position-fixed bottom-0 end-0 m-3';
+  toast.role = 'alert';
+  toast.innerHTML = `<div class="d-flex"><div class="toast-body">${msg}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>`;
+  document.body.appendChild(toast);
+  let bsToast = new bootstrap.Toast(toast, { delay: 3000 });
+  bsToast.show();
+  toast.addEventListener('hidden.bs.toast', () => toast.remove());
+}
+
+// Adiciona botão de concluir atividade na rotina
+(function enhanceRoutineList() {
+  const origLoadRoutine = loadRoutine;
+  window.loadRoutine = function() {
+    origLoadRoutine();
+    let users = JSON.parse(localStorage.getItem('users') || '[]');
+    let user = users.find(u => u.email === (currentUser && currentUser.email));
+    if (!user || !user.routine.length) return;
+    const routineList = document.getElementById('routine-list');
+    Array.from(routineList.children).forEach((card, idx) => {
+      if (!user.routine[idx].completed) {
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-sm btn-success ms-2';
+        btn.innerText = 'Concluir';
+        btn.onclick = function() { completeActivity(idx); };
+        card.querySelector('.card-body > div:last-child').appendChild(btn);
+      } else {
+        const badge = document.createElement('span');
+        badge.className = 'badge bg-success ms-2';
+        badge.innerText = 'Concluída';
+        card.querySelector('.card-body > div:last-child').appendChild(badge);
+      }
+    });
+  };
+})();
